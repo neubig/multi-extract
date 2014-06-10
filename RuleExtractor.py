@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 from collections import defaultdict
+import re
+import itertools
 
 class RuleExtractor(object):
 
@@ -18,7 +20,7 @@ class RuleExtractor(object):
 
     # Parsing functions
     def parse_words(self, x):
-        return x.strip().split(" ")
+        return re.findall(r"[^ ]+", x)
     def parse_align(self, x):
         ret = []
         if len(x) != 0:
@@ -32,13 +34,13 @@ class RuleExtractor(object):
     # align is the list of alignments for the next span to be added
     def extract_phrases(self, phrases, align):
         ret = []
-        # Get the closures of all target words and alignments of all source words
+        # Get the closures of all target words and alignments of all src words
         ialigns = defaultdict(lambda: [])
         jclosures = defaultdict(lambda: (self.max_len, -1))
         for i, j in align:
             jclosures[j] = (min(i, jclosures[j][0]), max(i, jclosures[j][1]))
             ialigns[i].append(j)    
-        # For all source spans, check if they are ok
+        # For all src spans, check if they are ok
         for phrase in phrases:
             ok = True
             trg_span = (self.max_len, -1)
@@ -66,9 +68,8 @@ class RuleExtractor(object):
         return 1
     
     # Take phrases and make hiero phrases
-    def abstract_phrases(self, phrases):
+    def abstract_phrases(self, phrases, holes):
         # Index phrases to use as holes (use all phrases for now)
-        holes = phrases
         hole_idxs = defaultdict(lambda: [])
         for idx, (i_left, i_right) in enumerate([x[0] for x in holes]):
             hole_idxs[i_left].append( (i_right, idx) )
@@ -125,19 +126,53 @@ class RuleExtractor(object):
         strs = [ self.create_phrase_string(words[x], span[x], [y[x] for y in holes]) for x in range(0, len(words)) ]
         return "%s ||| %s ||| %f" % (strs[0], " |COL| ".join(strs[1:]), count)
 
-    # Create rules from words and alignments
-    def create_hiero_rules(self, words, aligns):
-        # Get non-null alignments
+    # Get a list of sets of non-null alignments
+    def create_nonnull(self, aligns):
         nonnull = [set([x[0] for xs in aligns for x in xs])]
         for g in aligns:
             nonnull.append(set([x[1] for x in g]))
-        # Get the alignable source phrases
+        return nonnull
+
+    # Create the list of alignable minimal src phrases to examine
+    def create_minimal_srcs(self, src_nonnull, src_len):
+        # Get the alignable src phrases
         phrases = []
-        for i in range(0, len(words[0])):
-            for j in range(i+1, min(i+self.max_span,len(words[0])+1)):
-                if i in nonnull[0] and j-1 in nonnull[0]:
+        for i in range(0, src_len):
+            for j in range(i+1, min(i+self.max_span,src_len+1)):
+                if i in src_nonnull and j-1 in src_nonnull:
                     phrases.append( [(i,j)] )
+        return phrases
+
+    # Extend the range of a phrase to cover all neighboring null alignments
+    def extend_range(self, phrase, nonnull, wordlen):
+        start = phrase[0]
+        while start > 0 and not start-1 in nonnull:
+            start -= 1
+        end = phrase[1]
+        while end < wordlen and not end in nonnull:
+            end += 1
+        return itertools.product(range(start,phrase[0]+1), range(phrase[1],end+1))
+
+    # Add null alignments to existing phrases
+    def add_nulls(self, words, phrases, nonnulls):
+        # For each phrase, expand the edges
+        # Take the cross-product of the expanded edges
+        ret = []
+        for phrase in phrases:
+            extended = [self.extend_range(x, y, len(w)) for w, x, y in zip(words, phrase, nonnulls)]
+            ret.extend( itertools.product(*extended) )
+        return [list(x) for x in ret]
+
+    # Create rules from words and alignments
+    def create_hiero_rules(self, words, aligns):
+        # Get non-null alignments
+        nonnull = self.create_nonnull(aligns)
+        # Get the alignable src phrases
+        holes = self.create_minimal_srcs(nonnull[0], len(words[0]))
         # For each target, add the alignable targets
         for word, g in zip(words[1:], aligns):
-            phrases = self.extract_phrases(phrases, g)
-        return self.abstract_phrases(phrases)
+            holes = self.extract_phrases(holes, g)
+        # Holes will only be minimal phrases, but for actual extracted
+        # phrases we will add null-aligned words
+        phrases = self.add_nulls(words, holes, nonnull)
+        return self.abstract_phrases(phrases, holes)
