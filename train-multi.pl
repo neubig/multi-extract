@@ -10,8 +10,8 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $THREADS=2;
-my $LMSIZE="00001000";
-my $TMSIZE="00001000";
+my $LMSIZE="10000000";
+my $TMSIZE="00100000";
 GetOptions(
 "threads=s" => \$THREADS,
 );
