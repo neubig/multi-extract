@@ -115,9 +115,9 @@ class RuleExtractor(object):
             if type(pre) is str:
                 ret.append("\"%s\"" % pre)
             elif not pre in hole_done:
-                ret.append("x%d" % pre)
+                ret.append("x%d:X" % pre)
                 hole_done.add(pre)
-        return " ".join(ret)
+        return "%s @ X" % " ".join(ret)
     
     # Convert a full rule into a travatar-style representation
     def create_rule_string(self, words, phrase, count):
