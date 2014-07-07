@@ -21,7 +21,7 @@ if(@ARGV == 0) {
     exit 1;
 }
 
-my $HOME = "/home/is/neubig";
+my $HOME = "/home/neubig";
 my $MULTDIR="$HOME/work/multi-extract";
 my $TRAVDIR="$HOME/work/travatar";
 my $GIZADIR="$HOME/usr/local/giza-pp";
@@ -58,8 +58,8 @@ run_two($cmd1, $cmd2);
 # Score each factor of the table with conditional probabilities and lexical
 foreach my $factnum (0 .. $#trgs) {
     my $trg = $trgs[$factnum];
-    $cmd1 = "zcat multi-model/$ID/model/extract.gz | $MULTDIR/script/extract-factor.pl $factnum | env LC_ALL=C sort | $TRAVDIR/script/train/score-t2s.pl --lex-prob-file=$standmod[$factnum]/lex/trg_given_src.lex --prefix=$factnum --cond-prefix=egf --joint | env LC_ALL=C sort | gzip > multi-model/$ID/model/rule-table.src-trg.$factnum.gz";
-    $cmd2 = "zcat multi-model/$ID/model/extract.gz | $MULTDIR/script/extract-factor.pl $factnum | $TRAVDIR/script/train/reverse-rt.pl | env LC_ALL=C sort | $TRAVDIR/script/train/score-t2s.pl --lex-prob-file=$standmod[$factnum]/lex/src_given_trg.lex --prefix=$factnum --cond-prefix=fge | $TRAVDIR/script/train/reverse-rt.pl | env LC_ALL=C sort | gzip > multi-model/$ID/model/rule-table.trg-src.$factnum.gz";
+    $cmd1 = "zcat multi-model/$ID/model/extract.gz | $MULTDIR/extract-factor.pl $factnum | env LC_ALL=C sort | $TRAVDIR/script/train/score-t2s.pl --lex-prob-file=$standmod[$factnum]/lex/trg_given_src.lex --prefix=$factnum --cond-prefix=egf --joint | env LC_ALL=C sort | gzip > multi-model/$ID/model/rule-table.src-trg.$factnum.gz";
+    $cmd2 = "zcat multi-model/$ID/model/extract.gz | $MULTDIR/extract-factor.pl $factnum | $TRAVDIR/script/train/reverse-rt.pl | env LC_ALL=C sort | $TRAVDIR/script/train/score-t2s.pl --lex-prob-file=$standmod[$factnum]/lex/src_given_trg.lex --prefix=$factnum --cond-prefix=fge | $TRAVDIR/script/train/reverse-rt.pl | env LC_ALL=C sort | gzip > multi-model/$ID/model/rule-table.trg-src.$factnum.gz";
     run_two($cmd1, $cmd2);
 }
 
@@ -70,7 +70,7 @@ for my $factnum ("all", 0 .. $#trgs) {
         push @tables, "multi-model/$ID/model/rule-table.$dir.$factnum.gz";
     }
 }
-safesystem("$MULTDIR/script/combine-multi-rt.pl @tables | gzip > multi-model/$ID/model/rule-table.gz");
+safesystem("$MULTDIR/combine-multi-rt.pl @tables | gzip > multi-model/$ID/model/rule-table.gz");
 
 # Create the glue rules
 my $gfile = "$WD/multi-model/$ID/model/glue-rules";

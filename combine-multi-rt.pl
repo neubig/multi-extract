@@ -9,9 +9,9 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my $ARG = "";
+my $LIMIT = "20";
 GetOptions(
-"arg=s" => \$ARG,
+"limit=i" => \$LIMIT,
 );
 
 if((@ARGV == 0) or (@ARGV % 2 != 0)) {
@@ -66,9 +66,21 @@ while($currs[0]) {
             }
         }
     }
+    # Filter the features and calculate the trimming score
+    my @sorted;
     foreach my $cols (@out) {
         $cols->[2] = join(" ", grep(!/^(w=|\d+p=|\d*lfreq)/, split(/ /, $cols->[2])));
-        print join(" ||| ",@{$cols})."\n";
+        my $str = join(" ||| ",@{$cols});
+        $str =~ / egfp=([^ ]+)/ or die "No e given f probability in $str";
+        @sorted = [$1, $str];
+    }
+    @sorted = sort { $b->[0] <=> $a->[0] } @sorted;
+    # Print the top n
+    my $done = 0;
+    for(@sorted) {
+        last if $done >= $LIMIT;
+        print "$_->[1]\n";
+        $done += 1;
     }
     # Index the array
     @currs = @nexts;
