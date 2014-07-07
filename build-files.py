@@ -30,7 +30,7 @@ def read_xml_lines(filename):
     words = []
     for line in xml_file:
         line = line.decode().strip()
-        match = re.search(r"<s id", line)
+        match = re.search(r"<s ", line)
         if match:
             words.append([])
         else:
