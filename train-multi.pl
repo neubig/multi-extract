@@ -41,7 +41,7 @@ for(@trgs) {
 }
 for(@files) { -e $_ or die "Could not find file $_\n"; }
 
-my $ID = "$SRC".join("", @trgs)."-lm$LMSIZE-tm$TMSIZE";
+my $ID = "$SRC".join("", @trgs)."-lm$LMSIZE-tm$TMSIZE-fstd";
 
 # Create the output directory
 (not -e "multi-model/$ID") or die "multi-model/$ID already exists";

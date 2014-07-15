@@ -72,7 +72,7 @@ while($currs[0]) {
         $cols->[2] = join(" ", grep(!/^(w=|\d+p=|\d*lfreq)/, split(/ /, $cols->[2])));
         my $str = join(" ||| ",@{$cols});
         $str =~ / egfp=([^ ]+)/ or die "No e given f probability in $str";
-        @sorted = [$1, $str];
+        push @sorted, [$1, $str];
     }
     @sorted = sort { $b->[0] <=> $a->[0] } @sorted;
     # Print the top n
