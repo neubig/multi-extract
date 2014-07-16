@@ -14,6 +14,8 @@ my $LMSIZE="10000000";
 my $TMSIZE="00100000";
 GetOptions(
 "threads=s" => \$THREADS,
+"lmsize=s" => \$LMSIZE,
+"tmsize=s" => \$TMSIZE,
 );
 
 if(@ARGV == 0) {
