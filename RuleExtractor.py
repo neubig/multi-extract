@@ -101,23 +101,24 @@ class RuleExtractor(object):
     
     # Create a single string of abstracted rules
     def create_phrase_string(self, words, span, holes):
-        # print("span: %r" % str(span))
-        # print("holes: %r" % str(holes))
-        # Add the words and delete the holes
-        prelim = words[span[0]:span[1]]
-        for idx, hole_span in enumerate(holes):
-            for i in range(hole_span[0]-span[0], hole_span[1]-span[0]):
-                prelim[i] = idx
-        # Add quotes for words and add holes only once
-        hole_done = set()
+        # Find the holes
+        sorted_holes = sorted(enumerate(holes), key=lambda x: x[1][0])
+        # sorted_holes.sort(key=lambda x: x[1][0])
+        # Add the values one by one
+        prev = span[0]
         ret = []
-        for pre in prelim:
-            if type(pre) is str:
-                ret.append("\"%s\"" % pre)
-            elif not pre in hole_done:
-                ret.append("x%d:X" % pre)
-                hole_done.add(pre)
-        return "%s @ X" % " ".join(ret)
+        for idx, (start, end) in sorted_holes:
+            # Add the words
+            if prev != start:
+                ret.append('"'+'" "'.join(words[prev:start])+'"')
+            # Add the hole
+            ret.append("x%d:X" % idx)
+            prev = end
+        if prev != span[1]:
+            ret.append('"'+'" "'.join(words[prev:span[1]])+'" @ X')
+        else:
+            ret.append('@ X')
+        return ' '.join(ret)
     
     # Convert a full rule into a travatar-style representation
     def create_rule_string(self, words, phrase, count):

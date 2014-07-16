@@ -42,7 +42,7 @@ class TestRuleExtractor(unittest.TestCase):
     
     def test_phrase_string(self):
         holes = [(2,4), (1,2)]
-        exp_phrase = "\"he\" x1 x0 \"taro\""
+        exp_phrase = "\"he\" x1:X x0:X \"taro\" @ X"
         act_phrase = self.default.create_phrase_string(self.taro_e, (0,5), holes)
         self.assertEqual(act_phrase, exp_phrase)
 

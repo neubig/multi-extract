@@ -23,7 +23,7 @@ if(@ARGV == 0) {
     exit 1;
 }
 
-my $HOME = "/home/is/neubig";
+my $HOME = $ENV{"HOME"};
 my $MULTDIR="$HOME/work/multi-extract";
 my $TRAVDIR="$HOME/work/travatar";
 my $GIZADIR="$HOME/usr/local/giza-pp";
