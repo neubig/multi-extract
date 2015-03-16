@@ -10,10 +10,14 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $THREADS=2;
-my $LMSIZE="10000000";
-my $TMSIZE="00100000";
+my $SRC="en";
+my $LMSIZE="0100000";
+my $TMSIZE="0100000";
 GetOptions(
+"lmsize=s" => \$LMSIZE,
+"tmsize=s" => \$TMSIZE,
 "threads=s" => \$THREADS,
+"src=s" => \$SRC,
 );
 
 if(@ARGV == 0) {
@@ -26,7 +30,6 @@ my $MULTDIR="$HOME/work/multi-extract";
 my $TRAVDIR="$HOME/work/travatar";
 my $GIZADIR="$HOME/usr/local/giza-pp";
 my $WD=`pwd`; chomp $WD;
-my $SRC="en";
 my @trgs = @ARGV;
 
 #################### Rule extraction ##############################
@@ -41,7 +44,7 @@ for(@trgs) {
 }
 for(@files) { -e $_ or die "Could not find file $_\n"; }
 
-my $ID = "$SRC".join("", @trgs)."-lm$LMSIZE-tm$TMSIZE-fstd";
+my $ID = "$SRC".join("", @trgs)."-lm".join("x",map { $LMSIZE } @trgs)."-tm$TMSIZE-fstd";
 
 # Create the output directory
 (not -e "multi-model/$ID") or die "multi-model/$ID already exists";

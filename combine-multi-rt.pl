@@ -10,8 +10,13 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $LIMIT = "20";
+# Types of limits:
+#  egfp: Simply the top scoring src->trg0/trg1/... pairs
+#  0egfp: Choose the top scoring trg0s, and the single best remainder
+my $LIMIT_TYPE = "egfp";
 GetOptions(
 "limit=i" => \$LIMIT,
+"limit-type=s" => \$LIMIT_TYPE,
 );
 
 if((@ARGV == 0) or (@ARGV % 2 != 0)) {
@@ -68,11 +73,27 @@ while($currs[0]) {
     }
     # Filter the features and calculate the trimming score
     my @sorted;
+    my %best;
     foreach my $cols (@out) {
         $cols->[2] = join(" ", grep(!/^(w=|\d+p=|\d*lfreq)/, split(/ /, $cols->[2])));
         my $str = join(" ||| ",@{$cols});
         $str =~ / egfp=([^ ]+)/ or die "No e given f probability in $str";
-        push @sorted, [$1, $str];
+        my $egfp = $1;
+        if($LIMIT_TYPE eq "egfp") {
+            push @sorted, [$egfp, $str];
+        } elsif($LIMIT_TYPE eq "0egfp") {
+            $str =~ / 0egfp=([^ ]+)/ or die "No e given f probability in $str";
+            my $egfp0 = $1;
+            $cols->[1] =~ /^(.*?) \|COL\|/ or die;
+            my $firsttrg = $1;
+            my $pair = $best{$firsttrg};
+            if((not $pair) or ($egfp > $pair->[2])) {
+                $best{$firsttrg} = [$egfp0, $str, $egfp];
+            }
+        }
+    }
+    if($LIMIT_TYPE eq "0egfp") {
+        @sorted = values(%best);
     }
     @sorted = sort { $b->[0] <=> $a->[0] } @sorted;
     # Print the top n
